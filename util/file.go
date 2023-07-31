@@ -114,38 +114,39 @@ const (
 func CreateNavalYAMLFile(outputPath string, id string, ty TT, waitSeconds int, content string) error {
 	if ty == Create {
 		templateMeta := `id: %s
-	available: true
-	type: %d
-	wait_seconds: %d
-	items:`
-
-		templateContent := `- k8s_yaml_content: |
-	%s`
-		data := strings.TrimSpace(fmt.Sprintf(templateMeta, id, ty, waitSeconds)) + "\n"
+available: true
+type: %d
+wait_seconds: %d
+items:
+%s`
+		k8sContent := ""
 		for _, block := range strings.Split(content, "---") {
 			if strings.TrimSpace(block) == "" {
 				continue
 			}
-			data += ("	" + fmt.Sprintf(templateContent, AddPrefixToEveryLine(strings.TrimSpace(block), "		")) + "\n")
+			k8sContent += ("  - k8s_yaml_content: |" + "\n" + AddPrefixToEveryLine(strings.TrimSpace(block), "      ") + "\n")
 		}
+		data := strings.TrimSpace(fmt.Sprintf(templateMeta, id, ty, waitSeconds, k8sContent))
 		return CreateFileWithData(outputPath, []byte(data))
 	} else if ty == Convert {
 		templateMeta := `id: %s
-		available: true
-		type: %d
-		wait_seconds: %d
-		items:`
-		templateContent := `- docker_compose_content: |
-	%s`
-		data := strings.TrimSpace(fmt.Sprintf(templateMeta, id, ty, waitSeconds)) + "\n"
+available: true
+type: %d
+wait_seconds: %d
+kompose:
+  items:
+%s`
+		composeContent := ""
 		for _, block := range strings.Split(content, "---") {
 			if strings.TrimSpace(block) == "" {
 				continue
 			}
-			data += ("	" + fmt.Sprintf(templateContent, AddPrefixToEveryLine(strings.TrimSpace(block), "		")) + "\n")
+			composeContent += ("    - docker_compose_content: |" + "\n" + AddPrefixToEveryLine(strings.TrimSpace(block), "        ") + "\n")
 		}
+		data := strings.TrimSpace(fmt.Sprintf(templateMeta, id, ty, waitSeconds, composeContent))
 		return CreateFileWithData(outputPath, []byte(data))
 	}
+
 	return nil
 }
 
