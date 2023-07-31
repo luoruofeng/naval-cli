@@ -1,23 +1,26 @@
 package cmd
 
 import (
-	"fmt"
+	"net/http"
 
+	"github.com/luoruofeng/naval-cli/util"
 	"github.com/spf13/cobra"
 )
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "根据任务id进行删除",
+	Long:  `根据任务id进行删除`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
+		id, _ := cmd.Flags().GetString("id")
+		host, _ := cmd.Flags().GetString("host")
+		port, _ := cmd.Flags().GetInt("port")
+		if id == "" {
+			cmd.Help()
+			return
+		}
+		util.DeleteHttpRequest(host, port, id, http.MethodDelete, "task")
 	},
 }
 
@@ -32,5 +35,7 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	deleteCmd.Flags().IntP("port", "p", 8080, "naval端口号")
+	deleteCmd.Flags().StringP("host", "l", "localhost", "naval主机地址")
+	deleteCmd.Flags().StringP("id", "i", "", "需要删除的task id")
 }

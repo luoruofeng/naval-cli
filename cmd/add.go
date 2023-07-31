@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -23,8 +22,11 @@ naval文件可以是单个文件，也可以是文件夹。如果是文件夹，
 		input, _ := cmd.Flags().GetString("input")
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
-
-		util.HttpRequest(host, port, input, http.MethodPost, "task")
+		if input == "" {
+			cmd.Help()
+			return
+		}
+		util.AddHttpRequest(host, port, input, http.MethodPost, "task")
 	},
 }
 
@@ -41,8 +43,7 @@ func init() {
 	// is called directly, e.g.:
 	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	lp, _ := filepath.Abs("./")
-	input := addCmd.Flags().StringP("input", "i", lp, "输入的文件路径")
-	host := addCmd.Flags().StringP("host", "l", "localhost", "输入的文件路径")
-	port := addCmd.Flags().IntP("port", "p", 8080, "输入的文件路径")
-	fmt.Println(input, host, port)
+	addCmd.Flags().StringP("input", "i", lp, "输入的文件路径")
+	addCmd.Flags().IntP("port", "p", 8080, "naval端口号")
+	addCmd.Flags().StringP("host", "l", "localhost", "naval主机地址")
 }
