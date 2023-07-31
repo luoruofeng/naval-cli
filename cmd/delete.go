@@ -20,7 +20,7 @@ var deleteCmd = &cobra.Command{
 			cmd.Help()
 			return
 		}
-		util.DeleteHttpRequest(host, port, id, http.MethodDelete, "task")
+		util.HttpRequestByTaskId(host, port, id, http.MethodDelete, "task")
 	},
 }
 

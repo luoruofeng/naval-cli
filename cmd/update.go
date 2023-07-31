@@ -1,23 +1,27 @@
 package cmd
 
 import (
-	"fmt"
+	"net/http"
+	"path/filepath"
 
+	"github.com/luoruofeng/naval-cli/util"
 	"github.com/spf13/cobra"
 )
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "naval更新任务",
+	Long:  `根据给定的navel文件，向naval平台更新任务。`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("update called")
+		input, _ := cmd.Flags().GetString("input")
+		host, _ := cmd.Flags().GetString("host")
+		port, _ := cmd.Flags().GetInt("port")
+		if input == "" {
+			cmd.Help()
+			return
+		}
+		util.AddHttpRequest(host, port, input, http.MethodPut, "task")
 	},
 }
 
@@ -33,4 +37,8 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// updateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	lp, _ := filepath.Abs("./")
+	updateCmd.Flags().StringP("input", "i", lp, "输入的文件路径")
+	updateCmd.Flags().IntP("port", "p", 8080, "naval端口号")
+	updateCmd.Flags().StringP("host", "l", "localhost", "naval主机地址")
 }

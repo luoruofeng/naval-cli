@@ -54,9 +54,9 @@ func AddHttpRequest(host string, port int, filePath string, method string, path 
 	}
 }
 
-func DeleteHttpRequest(host string, port int, id string, method string, path string) {
+func HttpRequestByTaskId(host string, port int, id string, method string, path string) {
 	url := GeneratePath(host, port, path)
-	req, err := http.NewRequest(http.MethodDelete, url+"/"+id, strings.NewReader(""))
+	req, err := http.NewRequest(method, url+"/"+id, strings.NewReader(""))
 	if err != nil {
 		fmt.Println("创建请求失败", err)
 		return
