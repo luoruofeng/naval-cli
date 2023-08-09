@@ -1,11 +1,10 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "master" ]
 
@@ -21,8 +20,8 @@ jobs:
       with:
         go-version: ^1.19
 
-    - name: Build
-      run: make bin
+    - name: Cross Build
+      run: make cross
 
     - name: Test
       run: go test -v ./...
@@ -31,4 +30,46 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: "naval-cli"
-        path: "naval-cli"
+        path: ./bin
+
+  release:
+    permissions:
+      contents: write # to create a release 
+
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: "naval-cli"
+          path: ./bin
+
+      - name: Create checksums
+        working-directory: bin
+        run: |
+          find . -type f -print0 | sort -z | xargs -r0 shasum -a 256 -b | sed 's# \*\./# *#' > $RUNNER_TEMP/checksums.txt
+          shasum -a 256 -U -c $RUNNER_TEMP/checksums.txt
+          mv $RUNNER_TEMP/checksums.txt .
+          cat checksums.txt | while read sum file; do echo "$sum $file" > ${file#\*}.sha256; done
+          
+      - name: List artifacts
+        run: |
+          tree -nh bin
+          
+      - name: Check artifacts
+        run: |
+          find bin -type f -exec file -e ascii -- {} +
+      - name: Print GitHub Ref
+        run: |
+          echo "GitHub Ref: ${{ github.ref }}"
+      
+      - name: GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: ncipollo/release-action@v1.9.0
+        with:
+          artifacts: bin/*
+          generateReleaseNotes: false
+          draft: false
+          token: ${{ secrets.GITHUB_TOKEN }}
